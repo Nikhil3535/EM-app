@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /** This class represents the service for departments. */
+@GetMapping("/check-db")
+public String checkDb(DataSource ds) throws Exception {
+    return ds.getConnection().getMetaData().getURL();
+}
 @Service
 public class DepartmentService {
 

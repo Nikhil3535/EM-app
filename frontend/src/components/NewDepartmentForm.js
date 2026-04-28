@@ -27,7 +27,7 @@ const NewDepartmentForm = () => {
     };
 
     try {
-      const response = await fetch('https://employee-management-app-gdm5.onrender.com/api/departments', {
+      const response = await fetch('http://3.18.106.73:8080/api/departments', {
         method: 'POST',
         headers: {
           Accept: '*/*',
