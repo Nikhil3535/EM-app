@@ -1,0 +1,80 @@
+stages:
+  - docker
+  - k8s_deploy
+
+variables:
+  DOCKER_IMAGE_BACKEND: "$DOCKER_USERNAME/employee-backend:$CI_COMMIT_SHORT_SHA"
+  DOCKER_IMAGE_FRONTEND: "$DOCKER_USERNAME/employee-frontend:$CI_COMMIT_SHORT_SHA"
+  AWS_REGION: "us-east-2"
+  EKS_CLUSTER_NAME: "EM-app"
+
+# -----------------------------
+# DOCKER BUILD & PUSH
+# -----------------------------
+docker_build_push:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+  script:
+    - cd backend
+    - docker build --no-cache .
+    - docker build -t $DOCKER_IMAGE_BACKEND backend/
+    - docker push $DOCKER_IMAGE_BACKEND
+
+    - cd frontend
+    - docker build -t $DOCKER_IMAGE_FRONTEND frontend/
+    - docker push $DOCKER_IMAGE_FRONTEND
+
+# -----------------------------
+# KUBERNETES DEPLOY
+# -----------------------------
+k8s_deploy:
+  stage: k8s_deploy
+  image: amazon/aws-cli
+  before_script:
+    - yum install -y tar gzip curl
+
+    # install kubectl
+    - curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x kubectl && mv kubectl /usr/local/bin/
+
+    # AWS login
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY
+    - aws configure set aws_secret_access_key $AWS_SECRET_KEY
+    - aws configure set region $AWS_REGION
+
+    # connect to EKS
+    - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+  script:
+    - echo "===== APPLY KUBERNETES FILES ====="
+
+    - kubectl apply -f backend-deployment.yaml
+    - kubectl apply -f backend-service.yaml
+
+    - kubectl apply -f frontend-deployment.yaml
+    - kubectl apply -f frontend-service.yaml
+
+    - echo "===== UPDATE IMAGE ====="
+
+    - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
+    - kubectl set image deployment/frontend-deployment frontend=$DOCKER_IMAGE_FRONTEND
+
+    - echo "===== WAIT FOR ROLLOUT ====="
+
+    - kubectl rollout status deployment/backend-deployment
+    - kubectl rollout status deployment/frontend-deployment
+
+    - echo "===== CLUSTER STATUS ====="
+
+    - kubectl get nodes -o wide
+    - kubectl get pods -o wide
+    - kubectl get svc
+
+    - echo "===== APPLICATION URLS ====="
+
+    - kubectl get svc backend-service
+    - kubectl get svc frontend-service
