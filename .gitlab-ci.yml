@@ -55,22 +55,28 @@ k8s_deploy:
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
   script:
-    - echo "===== DEPLOY TO KUBERNETES ====="
+   - echo "===== RECREATE BACKEND SERVICE ====="
 
-    # apply once
-    - kubectl apply -f backend-deployment.yaml
-    - kubectl apply -f backend-service.yaml
-    - kubectl apply -f frontend-deployment.yaml
-    - kubectl apply -f frontend-service.yaml
+  # delete old service (ignore error if not exists)
+   - kubectl delete svc backend-service || true
+
+  # apply new service (internal ELB)
+   - kubectl apply -f backend-service.yaml
+
+   - echo "===== DEPLOY APPLICATION ====="
+
+   - kubectl apply -f backend-deployment.yaml
+   - kubectl apply -f frontend-deployment.yaml
+   - kubectl apply -f frontend-service.yaml
 
     # update images (rolling update)
-    - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
-    - kubectl set image deployment/frontend-deployment frontend=$DOCKER_IMAGE_FRONTEND
+   - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
+   - kubectl set image deployment/frontend-deployment frontend=$DOCKER_IMAGE_FRONTEND
 
     # wait rollout
-    - kubectl rollout status deployment/backend-deployment
-    - kubectl rollout status deployment/frontend-deployment
+   - kubectl rollout status deployment/backend-deployment
+   - kubectl rollout status deployment/frontend-deployment
 
     # status check
-    - kubectl get pods -o wide
-    - kubectl get svc
+   - kubectl get pods -o wide
+   - kubectl get svc
