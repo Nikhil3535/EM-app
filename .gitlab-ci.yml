@@ -36,8 +36,9 @@ k8s_deploy:
   image: alpine:latest
 
   before_script:
+    - apk add --no-cache curl bash aws-cli
     - apk add --no-cache curl bash python3 py3-pip
-    - pip install awscli
+   
 
     # install kubectl once
     - curl -LO "https://dl.k8s.io/release/stable.txt"
