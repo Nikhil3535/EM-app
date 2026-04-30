@@ -1,5 +1,3 @@
-// server.js
-
 import express from 'express';
 import axios from 'axios';
 import path from 'path';
@@ -8,7 +6,7 @@ import { fileURLToPath } from 'url';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Fix for __dirname in ES modules
+// Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -19,13 +17,15 @@ const BACKEND_URL = 'http://internal-a3c53ec3847c14313982790c3fb5d9b2-1575810271
 app.use(express.json());
 
 // ===============================
-// 🔁 PROXY LAYER
+// 🔁 PROXY LAYER (FIXED)
 // ===============================
 app.use('/api', async (req, res) => {
   try {
-    const targetUrl = `${BACKEND_URL}${req.originalUrl}`;
+    // ✅ Remove /api prefix before forwarding
+    const backendPath = req.originalUrl.replace(/^\/api/, '');
+    const targetUrl = `${BACKEND_URL}${backendPath}`;
 
-    console.log(`Proxying: ${req.method} ${targetUrl}`);
+    console.log(`➡️ ${req.method} ${req.originalUrl} → ${targetUrl}`);
 
     const response = await axios({
       method: req.method,
@@ -33,7 +33,12 @@ app.use('/api', async (req, res) => {
       data: req.body,
       headers: {
         'Content-Type': 'application/json',
+        // forward auth headers if needed
+        ...(req.headers.authorization && {
+          Authorization: req.headers.authorization
+        })
       },
+      timeout: 10000
     });
 
     res.status(response.status).json(response.data);
@@ -43,6 +48,8 @@ app.use('/api', async (req, res) => {
 
     if (error.response) {
       res.status(error.response.status).json(error.response.data);
+    } else if (error.request) {
+      res.status(504).json({ message: 'Backend not responding (timeout)' });
     } else {
       res.status(500).json({ message: 'Internal proxy error' });
     }
@@ -54,7 +61,7 @@ app.use('/api', async (req, res) => {
 // ===============================
 app.use(express.static(path.join(__dirname, 'build')));
 
-// React routing fallback
+// React routing fallback (important for SPA)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
