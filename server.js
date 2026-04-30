@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 🔐 Internal ELB (PRIVATE - only accessible inside VPC)
-const BACKEND_URL = 'http://internal-a91fb2b3e17544d2ca613ed8b2510c59-611159952.us-east-2.elb.amazonaws.com';
+const BACKEND_URL = 'http://internal-a1f176012278247ea82c5ca72a1b58a1-600785892.us-east-2.elb.amazonaws.com';
 
 // Middleware
 app.use(express.json());
