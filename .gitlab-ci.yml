@@ -58,7 +58,7 @@ k8s_deploy:
    - echo "===== RECREATE BACKEND SERVICE ====="
 
   # delete old service (ignore error if not exists)
-   - kubectl delete svc backend-service || true
+   #- kubectl delete svc backend-service || true
 
   # apply new service (internal ELB)
    - kubectl apply -f backend-service.yaml
