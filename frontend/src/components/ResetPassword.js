@@ -37,7 +37,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await fetch('http://internal-a91fb2b3e17544d2ca613ed8b2510c59-611159952.us-east-2.elb.amazonaws.com/reset-password', {
+      const response = await fetch('/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, newPassword }),
