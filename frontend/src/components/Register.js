@@ -44,7 +44,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://internal-a3c53ec3847c14313982790c3fb5d9b2-1575810271.us-east-2.elb.amazonaws.com/register', {
+      const response = await fetch('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
