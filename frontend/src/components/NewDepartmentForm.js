@@ -27,7 +27,7 @@ const NewDepartmentForm = () => {
     };
 
     try {
-      const response = await fetch('http://internal-a3c53ec3847c14313982790c3fb5d9b2-1575810271.us-east-2.elb.amazonaws.com/api/departments', {
+      const response = await fetch('/api/departments', {
         method: 'POST',
         headers: {
           Accept: '*/*',
