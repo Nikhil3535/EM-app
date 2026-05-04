@@ -1,5 +1,6 @@
 stages:
   - docker
+  - setup_cluster
   - k8s_deploy
 
 variables:
@@ -29,6 +30,55 @@ docker_build_push:
     - docker push $DOCKER_IMAGE_FRONTEND
 
 # -----------------------------
+# ONE-TIME CLUSTER SETUP
+# -----------------------------
+setup_csi_driver:
+  stage: setup_cluster
+  image: alpine:latest
+  when: manual   # 👈 run only once
+
+  before_script:
+    - apk add --no-cache curl bash aws-cli
+
+    # install kubectl
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x kubectl && mv kubectl /usr/local/bin/
+
+    # install helm
+    - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+    # AWS auth
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - export AWS_DEFAULT_REGION=$AWS_REGION
+
+    # verify AWS
+    - aws sts get-caller-identity
+
+    # connect to EKS
+    - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+  script:
+    - echo "===== INSTALL CSI DRIVER ====="
+
+    - helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+    - helm repo update
+
+    - helm upgrade --install csi-secrets-store \
+        secrets-store-csi-driver/secrets-store-csi-driver \
+        --namespace kube-system \
+        --create-namespace \
+        --set syncSecret.enabled=true \
+        --set installCRDs=true
+
+    - echo "===== INSTALL AWS PROVIDER ====="
+    - kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
+
+    - echo "===== VERIFY ====="
+    - kubectl get crds | grep secretprovider
+    - kubectl get pods -n kube-system
+
+# -----------------------------
 # KUBERNETES DEPLOY
 # -----------------------------
 k8s_deploy:
@@ -36,19 +86,18 @@ k8s_deploy:
   image: alpine:latest
 
   before_script:
-    # install tools
     - apk add --no-cache curl bash aws-cli python3 py3-pip
 
     # install kubectl
     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     - chmod +x kubectl && mv kubectl /usr/local/bin/
 
-    # ✅ FIXED AWS ENV VARIABLES
+    # AWS auth
     - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
     - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
     - export AWS_DEFAULT_REGION=$AWS_REGION
 
-    # ✅ DEBUG (important)
+    # verify AWS
     - aws sts get-caller-identity
 
     # connect to EKS
@@ -57,7 +106,7 @@ k8s_deploy:
   script:
     - echo "===== APPLY SECRETS FIRST ====="
 
-    # ✅ apply secret config first
+    # apply secret config first
     - kubectl apply -f secret-provider.yaml
 
     - echo "===== APPLY SERVICES ====="
@@ -79,7 +128,7 @@ k8s_deploy:
     - kubectl rollout status deployment/backend-deployment
     - kubectl rollout status deployment/frontend-deployment
 
-    # debug info
+    # debug
     - kubectl get pods -o wide
     - kubectl get svc
     - kubectl get secret em-db-secret || true
