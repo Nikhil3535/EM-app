@@ -68,7 +68,7 @@ k8s_deploy:
    - kubectl apply -f backend-deployment.yaml
    - kubectl apply -f frontend-deployment.yaml
    - kubectl apply -f frontend-service.yaml
-
+   - kubectl apply -f secret-provider.yaml
     # update images (rolling update)
    - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
    - kubectl set image deployment/frontend-deployment frontend=$DOCKER_IMAGE_FRONTEND

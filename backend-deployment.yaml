@@ -12,17 +12,33 @@ spec:
       labels:
         app: backend
     spec:
+      serviceAccountName: em-db-secrets   # IAM role via IRSA
+
       containers:
         - name: backend
           image: niki2003/employee-backend:latest
           ports:
             - containerPort: 8080
+
+          # Load DB credentials from Kubernetes Secret (created via Secrets Manager)
+          envFrom:
+            - secretRef:
+                name: em-db-secret
+
+          # Optional: keep JWT here or move to Secrets Manager later
           env:
             - name: JWT_SECRET
               value: "abc123"
-            - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://database-1.chaq4ig4g031.us-east-2.rds.amazonaws.com:3306/employee_management"
-            - name: SPRING_DATASOURCE_USERNAME
-              value: "admin"
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: "Anirudh123"
+
+          volumeMounts:
+            - name: secrets-store
+              mountPath: "/mnt/secrets"
+              readOnly: true
+
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "em-db-secrets"
