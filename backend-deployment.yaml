@@ -20,25 +20,15 @@ spec:
           ports:
             - containerPort: 8080
 
-          # Load DB credentials from Kubernetes Secret (created via Secrets Manager)
+          # Load DB credentials from Kubernetes Secret (synced from AWS Secrets Manager)
           envFrom:
             - secretRef:
                 name: em-db-secret
 
-          # Optional: keep JWT here or move to Secrets Manager later
+          # JWT also from secret (more secure)
           env:
             - name: JWT_SECRET
-              value: "abc123"
-
-          volumeMounts:
-            - name: secrets-store
-              mountPath: "/mnt/secrets"
-              readOnly: true
-
-      volumes:
-        - name: secrets-store
-          csi:
-            driver: secrets-store.csi.x-k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: "em-db-secrets"
+              valueFrom:
+                secretKeyRef:
+                  name: em-db-secret
+                  key: JWT_SECRET
