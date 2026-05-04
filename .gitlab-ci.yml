@@ -38,7 +38,7 @@ setup_csi_driver:
   when: manual   # 👈 run only once
 
   before_script:
-    - apk add --no-cache curl bash aws-cli
+    - apk add --no-cache curl bash aws-cli openssl
 
     # install kubectl
     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
