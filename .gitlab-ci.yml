@@ -107,7 +107,7 @@ k8s_deploy:
     - echo "===== APPLY SECRETS FIRST ====="
 
     # apply secret config first
-    - kubectl apply -f secret-provider.yaml
+   # - kubectl apply -f secret-provider.yaml
 
     - echo "===== APPLY SERVICES ====="
     - kubectl apply -f backend-service.yaml
