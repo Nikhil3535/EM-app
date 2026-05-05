@@ -35,10 +35,10 @@ docker_build_push:
 setup_csi_driver:
   stage: setup_cluster
   image: alpine:latest
-  when: manual   # 👈 run only once
+  when: manual
 
   before_script:
-    - apk add --no-cache curl bash aws-cli openssl
+    - apk add --no-cache curl bash aws-cli
 
     # install kubectl
     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -52,10 +52,7 @@ setup_csi_driver:
     - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_KEY
     - export AWS_DEFAULT_REGION=$AWS_REGION
 
-    # verify AWS
     - aws sts get-caller-identity
-
-    # connect to EKS
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
   script:
@@ -74,8 +71,7 @@ setup_csi_driver:
     - echo "===== INSTALL AWS PROVIDER ====="
     - kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
 
-    - echo "===== VERIFY ====="
-    - kubectl get crds | grep secretprovider
+    - echo "===== VERIFY CSI ====="
     - kubectl get pods -n kube-system
 
 # -----------------------------
@@ -86,7 +82,7 @@ k8s_deploy:
   image: alpine:latest
 
   before_script:
-    - apk add --no-cache curl bash aws-cli python3 py3-pip
+    - apk add --no-cache curl bash aws-cli
 
     # install kubectl
     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -97,38 +93,45 @@ k8s_deploy:
     - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_KEY
     - export AWS_DEFAULT_REGION=$AWS_REGION
 
-    # verify AWS
     - aws sts get-caller-identity
-
-    # connect to EKS
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
   script:
-    - echo "===== APPLY SECRETS FIRST ====="
+    - echo "===== APPLY SECRET PROVIDER ====="
+    - kubectl apply -f secret-provider.yaml
 
-    # apply secret config first
-   # - kubectl apply -f secret-provider.yaml
+    - echo "===== WAIT FOR SECRET SYNC ====="
+    - sleep 20
+
+    - echo "===== VERIFY SECRET ====="
+    - kubectl get secret em-db-secret || true
 
     - echo "===== APPLY SERVICES ====="
     - kubectl apply -f backend-service.yaml
     - kubectl apply -f frontend-service.yaml
 
-    - echo "===== DEPLOY APPLICATION ====="
+    - echo "===== APPLY DEPLOYMENTS ====="
     - kubectl apply -f backend-deployment.yaml
     - kubectl apply -f frontend-deployment.yaml
 
-    # update images
+    - echo "===== UPDATE IMAGES ====="
     - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
     - kubectl set image deployment/frontend-deployment frontend=$DOCKER_IMAGE_FRONTEND
 
-    # restart backend to reload secrets
+    - echo "===== RESTART BACKEND ====="
     - kubectl rollout restart deployment/backend-deployment
 
-    # wait rollout
-    - kubectl rollout status deployment/backend-deployment
-    - kubectl rollout status deployment/frontend-deployment
+    - echo "===== WAIT FOR ROLLOUT ====="
+    - kubectl rollout status deployment/backend-deployment --timeout=180s
+    - kubectl rollout status deployment/frontend-deployment --timeout=180s
 
-    # debug
+    - echo "===== DEBUG INFO ====="
     - kubectl get pods -o wide
     - kubectl get svc
-    - kubectl get secret em-db-secret || true
+    - kubectl get endpoints backend-service
+
+    - echo "===== BACKEND LOGS ====="
+    - kubectl logs -l app=backend --tail=100
+
+    - echo "===== DESCRIBE BACKEND ====="
+    - kubectl describe pod -l app=backend
