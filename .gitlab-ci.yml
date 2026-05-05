@@ -97,6 +97,9 @@ k8s_deploy:
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
   script:
+    - kubectl config current-context
+    - kubectl get pods -n kube-system
+    - kubectl get crds | grep secretprovider
     - echo "===== APPLY SECRET PROVIDER ====="
     - kubectl apply -f secret-provider.yaml
 
