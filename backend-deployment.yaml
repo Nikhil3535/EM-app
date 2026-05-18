@@ -1,34 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: backend-deployment
+
 spec:
   replicas: 2
+
   selector:
     matchLabels:
       app: backend
+
   template:
     metadata:
       labels:
         app: backend
+
     spec:
-      serviceAccountName: secrets-em-app  # IAM role via IRSA
+      serviceAccountName: secrets-em-app
 
       containers:
         - name: backend
           image: niki2003/employee-backend:latest
+
           ports:
             - containerPort: 8080
 
-          # Load DB credentials from Kubernetes Secret (synced from AWS Secrets Manager)
           envFrom:
             - secretRef:
                 name: em-app-db
-
-          # JWT also from secret (more secure)
-          env:
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: em-app-db
-                  key: JWT_SECRET
