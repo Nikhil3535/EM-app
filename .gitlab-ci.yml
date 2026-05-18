@@ -162,7 +162,7 @@ k8s_deploy:
     - sleep 20
 
     - echo "===== VERIFY SECRET ====="
-    - kubectl get secret em-db-secret || true
+    - kubectl get secret em-app-db || true
 
     - echo "===== APPLY SERVICES ====="
     - kubectl apply -f backend-service.yaml
