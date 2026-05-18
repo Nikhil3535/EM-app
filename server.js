@@ -2,9 +2,15 @@ import express from 'express';
 import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import client from 'prom-client';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ===============================
+// 📊 PROMETHEUS METRICS INIT
+// ===============================
+client.collectDefaultMetrics();
 
 // Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -33,7 +39,8 @@ app.use('/api', async (req, res) => {
       data: req.body,
       headers: {
         'Content-Type': 'application/json',
-        // forward auth headers if needed
+
+        // Forward auth headers if needed
         ...(req.headers.authorization && {
           Authorization: req.headers.authorization
         })
@@ -48,22 +55,43 @@ app.use('/api', async (req, res) => {
 
     if (error.response) {
       res.status(error.response.status).json(error.response.data);
+
     } else if (error.request) {
-      res.status(504).json({ message: 'Backend not responding (timeout)' });
+      res.status(504).json({
+        message: 'Backend not responding (timeout)'
+      });
+
     } else {
-      res.status(500).json({ message: 'Internal proxy error' });
+      res.status(500).json({
+        message: 'Internal proxy error'
+      });
     }
+  }
+});
+
+// ===============================
+// 📊 PROMETHEUS METRICS ROUTE
+// ===============================
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+
+  } catch (error) {
+    console.error('❌ Metrics Error:', error.message);
+    res.status(500).end(error);
   }
 });
 
 // ===============================
 // 🌐 SERVE FRONTEND (React build)
 // ===============================
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'frontend', 'build')));
 
-// React routing fallback (important for SPA)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  res.sendFile(
+    path.join(__dirname, 'frontend', 'build', 'index.html')
+  );
 });
 
 // ===============================
