@@ -12,7 +12,7 @@ spec:
       labels:
         app: backend
     spec:
-      serviceAccountName: em-app-db   # IAM role via IRSA
+      serviceAccountName: secrets-em-app  # IAM role via IRSA
 
       containers:
         - name: backend
