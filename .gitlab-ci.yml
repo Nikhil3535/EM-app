@@ -7,7 +7,7 @@ variables:
   DOCKER_IMAGE_BACKEND: "$DOCKER_USERNAME/employee-backend:$CI_COMMIT_SHORT_SHA"
   DOCKER_IMAGE_FRONTEND: "$DOCKER_USERNAME/employee-frontend:$CI_COMMIT_SHORT_SHA"
   AWS_REGION: "us-east-2"
-  EKS_CLUSTER_NAME: "employee-cluster"
+  EKS_CLUSTER_NAME: "em-app-cluster"
   DOCKER_TLS_CERTDIR: ""
 
 # -----------------------------
@@ -34,46 +34,101 @@ docker_build_push:
 # -----------------------------
 setup_csi_driver:
   stage: setup_cluster
-  image: alpine:latest
+  image: alpine:3.20
   when: manual
 
   before_script:
-    - apk add --no-cache curl bash aws-cli
+    # Install required packages
+    - apk add --no-cache \
+        curl \
+        bash \
+        aws-cli \
+        openssl \
+        tar \
+        gzip \
+        git
 
-    # install kubectl
-    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-    - chmod +x kubectl && mv kubectl /usr/local/bin/
+    # -----------------------------
+    # Install kubectl
+    # -----------------------------
+    - KUBECTL_VERSION=v1.30.1
+    - curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/
 
-    # install helm
-    - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    # Verify kubectl
+    - kubectl version --client
 
-    # AWS auth
+    # -----------------------------
+    # Install Helm
+    # -----------------------------
+    - HELM_VERSION=v3.15.2
+    - curl -LO https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
+    - tar -zxvf helm-${HELM_VERSION}-linux-amd64.tar.gz
+    - mv linux-amd64/helm /usr/local/bin/helm
+    - chmod +x /usr/local/bin/helm
+
+    # Verify helm
+    - helm version
+
+    # -----------------------------
+    # AWS Authentication
+    # -----------------------------
     - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_KEY
     - export AWS_DEFAULT_REGION=$AWS_REGION
 
+    # Verify AWS identity
     - aws sts get-caller-identity
-    - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+    # Configure kubeconfig
+    - aws eks update-kubeconfig \
+        --name $EKS_CLUSTER_NAME \
+        --region $AWS_REGION
+
+    # Verify cluster access
+    - kubectl get nodes
 
   script:
     - echo "===== INSTALL CSI DRIVER ====="
 
-    - helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+    # Add Helm repo
+    - helm repo add secrets-store-csi-driver \
+        https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+
     - helm repo update
 
+    # Install CSI driver
     - helm upgrade --install csi-secrets-store \
         secrets-store-csi-driver/secrets-store-csi-driver \
         --namespace kube-system \
         --create-namespace \
         --set syncSecret.enabled=true \
+        --set enableSecretRotation=true \
+        --set rotationPollInterval=2m \
         --set installCRDs=true
 
     - echo "===== INSTALL AWS PROVIDER ====="
-    - kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
 
-    - echo "===== VERIFY CSI ====="
+    # Install AWS provider
+    - kubectl apply -f \
+        https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
+
+    - echo "===== WAIT FOR CSI PODS ====="
+
+    - kubectl rollout status daemonset/csi-secrets-store \
+        -n kube-system \
+        --timeout=180s || true
+
+    - sleep 20
+
+    - echo "===== VERIFY CSI DRIVER ====="
+
     - kubectl get pods -n kube-system
 
+    - kubectl get daemonset -n kube-system
+
+    - kubectl get crd | grep secrets-store
 # -----------------------------
 # KUBERNETES DEPLOY
 # -----------------------------
