@@ -19,6 +19,14 @@ spec:
     spec:
       serviceAccountName: secrets-em-app
 
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: em-db-secrets
+
       containers:
         - name: backend
           image: niki2003/employee-backend:latest
@@ -29,3 +37,8 @@ spec:
           envFrom:
             - secretRef:
                 name: em-app-db
+
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
