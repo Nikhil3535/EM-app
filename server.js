@@ -17,7 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 🔐 Internal ELB (PRIVATE - only accessible inside VPC)
-const BACKEND_URL = 'http://a8cb3c1c925944c2b92246c28f13e95e-277240930.us-east-2.elb.amazonaws.com';
+const BACKEND_URL = 'http://backend-service:80';
 
 // Middleware
 app.use(express.json());
@@ -28,7 +28,6 @@ app.use(express.json());
 app.use('/api', async (req, res) => {
   try {
     // ✅ Remove /api prefix before forwarding
-    const backendPath = req.originalUrl.replace(/^\/api/, '');
     const targetUrl = `${BACKEND_URL}${backendPath}`;
 
     console.log(`➡️ ${req.method} ${req.originalUrl} → ${targetUrl}`);
