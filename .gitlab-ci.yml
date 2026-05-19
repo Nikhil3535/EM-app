@@ -150,8 +150,7 @@ k8s_deploy:
 
     - aws sts get-caller-identity
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
-
- script:
+  script:
   - kubectl config current-context
   - kubectl get pods -n kube-system
   - kubectl get crds | grep secretprovider
