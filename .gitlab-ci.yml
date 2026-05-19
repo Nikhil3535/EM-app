@@ -155,6 +155,7 @@ k8s_deploy:
     - kubectl config current-context
     - kubectl get pods -n kube-system
     - kubectl get crds | grep secretprovider
+
     - echo "===== APPLY SECRET PROVIDER ====="
     - kubectl apply -f secret-provider.yaml
 
@@ -164,9 +165,19 @@ k8s_deploy:
     - echo "===== VERIFY SECRET ====="
     - kubectl get secret em-app-db || true
 
+    - echo "===== DELETE OLD SERVICES ====="
+    - kubectl delete svc backend-service --ignore-not-found=true
+    - kubectl delete svc frontend-service --ignore-not-found=true
+
+    - echo "===== WAIT FOR ELB CLEANUP ====="
+    - sleep 60
+
     - echo "===== APPLY SERVICES ====="
     - kubectl apply -f backend-service.yaml
     - kubectl apply -f frontend-service.yaml
+
+    - echo "===== WAIT FOR NEW ELB CREATION ====="
+    - sleep 120
 
     - echo "===== APPLY DEPLOYMENTS ====="
     - kubectl apply -f backend-deployment.yaml
