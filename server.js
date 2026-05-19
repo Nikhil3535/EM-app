@@ -17,7 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 🔐 Internal ELB (PRIVATE - only accessible inside VPC)
-const BACKEND_URL = 'http://ad1f40ef70ca84e5cb735da309528635-863801536.us-east-2.elb.amazonaws.com';
+const BACKEND_URL = 'http://backend-service:80';
 
 // Middleware
 app.use(express.json());
