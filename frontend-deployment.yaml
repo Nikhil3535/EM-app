@@ -1,21 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: frontend-deployment
   labels:
     app: frontend
+
 spec:
-  replicas: 2
+  replicas: 1
+
   selector:
     matchLabels:
       app: frontend
+
   template:
     metadata:
       labels:
         app: frontend
+
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "3000"
+
     spec:
       containers:
         - name: frontend
+
           image: niki2003/employee-frontend:latest
+
           ports:
-            - containerPort: 80
+            - containerPort: 3000
