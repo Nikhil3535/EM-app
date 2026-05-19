@@ -151,50 +151,77 @@ k8s_deploy:
     - aws sts get-caller-identity
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
-  script:
-    - kubectl config current-context
-    - kubectl get pods -n kube-system
-    - kubectl get crds | grep secretprovider
+ script:
+  - kubectl config current-context
+  - kubectl get pods -n kube-system
+  - kubectl get crds | grep secretprovider
 
-    - echo "===== APPLY SECRET PROVIDER ====="
-    - kubectl apply -f secret-provider.yaml
+  - echo "===== APPLY SECRET PROVIDER ====="
+  - kubectl apply -f secret-provider.yaml
 
-    - echo "===== WAIT FOR SECRET SYNC ====="
-    - sleep 20
+  - echo "===== WAIT FOR SECRET SYNC ====="
+  - sleep 20
 
-    - echo "===== VERIFY SECRET ====="
-    - kubectl get secret em-app-db || true
+  - echo "===== VERIFY SECRET ====="
+  - kubectl get secret em-app-db || true
 
+  # ------------------------------------------------
+  # BACKEND INTERNAL ELB (RUN ONLY FIRST TIME)
+  # ------------------------------------------------
+  - echo "===== DELETE OLD BACKEND SERVICE ====="
+  - kubectl delete svc backend-service --ignore-not-found=true
 
-    - echo "===== APPLY SERVICES ====="
-    - kubectl apply -f backend-service.yaml
-    - kubectl apply -f frontend-service.yaml
+  - echo "===== WAIT FOR OLD ELB CLEANUP ====="
+  - sleep 120
 
-    - echo "===== WAIT FOR NEW ELB CREATION ====="
-    - sleep 120
+  - echo "===== CREATE INTERNAL BACKEND SERVICE ====="
+  - kubectl apply -f backend-service.yaml
 
-    - echo "===== APPLY DEPLOYMENTS ====="
-    - kubectl apply -f backend-deployment.yaml
-    - kubectl apply -f frontend-deployment.yaml
+  # ------------------------------------------------
+  # KEEP FRONTEND ELB SAME
+  # ------------------------------------------------
+  - echo "===== VERIFY FRONTEND SERVICE ====="
+  - kubectl get svc frontend-service || kubectl apply -f frontend-service.yaml
 
-    - echo "===== UPDATE IMAGES ====="
-    - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
-    - kubectl set image deployment/frontend-deployment frontend=$DOCKER_IMAGE_FRONTEND
+  # ------------------------------------------------
+  # DEPLOYMENTS
+  # ------------------------------------------------
+  - echo "===== APPLY DEPLOYMENTS ====="
+  - kubectl apply -f backend-deployment.yaml
+  - kubectl apply -f frontend-deployment.yaml
 
-    - echo "===== RESTART BACKEND ====="
-    - kubectl rollout restart deployment/backend-deployment
+  - echo "===== UPDATE IMAGES ====="
+  - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
+  - kubectl set image deployment/frontend-deployment frontend=$DOCKER_IMAGE_FRONTEND
 
-    - echo "===== WAIT FOR ROLLOUT ====="
-    - kubectl rollout status deployment/backend-deployment --timeout=180s
-    - kubectl rollout status deployment/frontend-deployment --timeout=180s
+  # ------------------------------------------------
+  # RESTART DEPLOYMENTS
+  # ------------------------------------------------
+  - echo "===== RESTART DEPLOYMENTS ====="
+  - kubectl rollout restart deployment/backend-deployment
+  - kubectl rollout restart deployment/frontend-deployment
 
-    - echo "===== DEBUG INFO ====="
-    - kubectl get pods -o wide
-    - kubectl get svc
-    - kubectl get endpoints backend-service
+  # ------------------------------------------------
+  # WAIT FOR ROLLOUT
+  # ------------------------------------------------
+  - echo "===== WAIT FOR ROLLOUT ====="
+  - kubectl rollout status deployment/backend-deployment --timeout=300s
+  - kubectl rollout status deployment/frontend-deployment --timeout=300s
 
-    - echo "===== BACKEND LOGS ====="
-    - kubectl logs -l app=backend --tail=100
+  # ------------------------------------------------
+  # DEBUG INFO
+  # ------------------------------------------------
+  - echo "===== PODS ====="
+  - kubectl get pods -o wide
 
-    - echo "===== DESCRIBE BACKEND ====="
-    - kubectl describe pod -l app=backend
+  - echo "===== SERVICES ====="
+  - kubectl get svc
+
+  - echo "===== BACKEND ENDPOINTS ====="
+  - kubectl get endpoints backend-service
+
+  - echo "===== BACKEND LOGS ====="
+  - kubectl logs -l app=backend --tail=100 || true
+
+  - echo "===== DESCRIBE BACKEND ====="
+  - kubectl describe pod -l app=backend
