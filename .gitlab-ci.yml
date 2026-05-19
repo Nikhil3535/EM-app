@@ -164,23 +164,15 @@ k8s_deploy:
   - echo "===== VERIFY SECRET ====="
   - kubectl get secret em-app-db || true
 
-  # ------------------------------------------------
-  # BACKEND INTERNAL ELB (RUN ONLY FIRST TIME)
-  # ------------------------------------------------
-  - echo "===== DELETE OLD BACKEND SERVICE ====="
-  - kubectl delete svc backend-service --ignore-not-found=true
-
-  - echo "===== WAIT FOR OLD ELB CLEANUP ====="
-  - sleep 120
-
-  - echo "===== CREATE INTERNAL BACKEND SERVICE ====="
-  - kubectl apply -f backend-service.yaml
+  
 
   # ------------------------------------------------
   # KEEP FRONTEND ELB SAME
   # ------------------------------------------------
   - echo "===== VERIFY FRONTEND SERVICE ====="
   - kubectl get svc frontend-service || kubectl apply -f frontend-service.yaml
+  - kubectl get svc backend-service || kubectl apply -f backend-service.yaml
+  
 
   # ------------------------------------------------
   # DEPLOYMENTS
