@@ -12,30 +12,82 @@ const PORT = process.env.PORT || 3000;
 // ===============================
 client.collectDefaultMetrics();
 
-// Fix __dirname for ES modules
+// Custom HTTP Request Counter
+const httpRequestCounter = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status'],
+});
+
+// Custom HTTP Request Duration
+const httpRequestDuration = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status'],
+  buckets: [0.1, 0.5, 1, 2, 5],
+});
+
+// ===============================
+// 📁 FIX __dirname FOR ES MODULES
+// ===============================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ USE KUBERNETES SERVICE DNS
+// ===============================
+// 🔗 BACKEND SERVICE (K8S DNS)
+// ===============================
 const BACKEND_URL = 'http://backend-service';
 
-// Middleware
+// ===============================
+// 🔧 MIDDLEWARE
+// ===============================
 app.use(express.json());
 
 // ===============================
-// 🔁 PROXY LAYER
+// 📊 REQUEST METRICS MIDDLEWARE
+// ===============================
+app.use((req, res, next) => {
+
+  const start = Date.now();
+
+  res.on('finish', () => {
+
+    const duration = (Date.now() - start) / 1000;
+
+    httpRequestCounter.inc({
+      method: req.method,
+      route: req.path,
+      status: res.statusCode,
+    });
+
+    httpRequestDuration.observe(
+      {
+        method: req.method,
+        route: req.path,
+        status: res.statusCode,
+      },
+      duration
+    );
+  });
+
+  next();
+});
+
+// ===============================
+// 🔁 API PROXY
 // ===============================
 app.use('/api', async (req, res) => {
+
   try {
 
-    // ✅ REMOVE /api PREFIX
+    // Remove /api prefix
     const backendPath = req.originalUrl.replace(/^\/api/, '');
 
-    // Example:
-    // /api/register -> /register
     const targetUrl = `${BACKEND_URL}${backendPath}`;
 
-    console.log(`➡️ ${req.method} ${req.originalUrl} → ${targetUrl}`);
+    console.log(
+      `➡️ ${req.method} ${req.originalUrl} → ${targetUrl}`
+    );
 
     const response = await axios({
       method: req.method,
@@ -45,10 +97,10 @@ app.use('/api', async (req, res) => {
         'Content-Type': 'application/json',
 
         ...(req.headers.authorization && {
-          Authorization: req.headers.authorization
-        })
+          Authorization: req.headers.authorization,
+        }),
       },
-      timeout: 10000
+      timeout: 10000,
     });
 
     res.status(response.status).json(response.data);
@@ -59,47 +111,70 @@ app.use('/api', async (req, res) => {
 
     if (error.response) {
 
-      res.status(error.response.status).json(error.response.data);
+      return res.status(error.response.status).json(
+        error.response.data
+      );
+    }
 
-    } else if (error.request) {
+    if (error.request) {
 
-      res.status(504).json({
-        message: 'Backend not responding'
-      });
-
-    } else {
-
-      res.status(500).json({
-        message: 'Internal proxy error'
+      return res.status(504).json({
+        message: 'Backend not responding',
       });
     }
+
+    return res.status(500).json({
+      message: 'Internal proxy error',
+    });
   }
 });
 
 // ===============================
-// 📊 METRICS
+// 📊 PROMETHEUS METRICS ROUTE
 // ===============================
 app.get('/metrics', async (req, res) => {
+
   try {
 
-    res.set('Content-Type', client.register.contentType);
+    res.set(
+      'Content-Type',
+      client.register.contentType
+    );
+
     res.end(await client.register.metrics());
 
   } catch (error) {
 
-    console.error('❌ Metrics Error:', error.message);
+    console.error(
+      '❌ Metrics Error:',
+      error.message
+    );
+
     res.status(500).end(error);
   }
 });
 
 // ===============================
-// 🌐 REACT BUILD
+// 🌐 SERVE REACT BUILD
 // ===============================
-app.use(express.static(path.join(__dirname, 'frontend', 'build')));
+app.use(
+  express.static(
+    path.join(__dirname, 'frontend', 'build')
+  )
+);
 
+// ===============================
+// ⚛️ REACT CATCH-ALL ROUTE
+// ===============================
 app.get('*', (req, res) => {
+
   res.sendFile(
-    path.join(__dirname, 'frontend', 'build', 'index.html')
+    path.join(
+      __dirname,
+      'frontend',
+      'build',
+      'index.html'
+    )
   );
 });
 
@@ -107,5 +182,12 @@ app.get('*', (req, res) => {
 // 🚀 START SERVER
 // ===============================
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+
+  console.log(
+    `✅ Frontend server running on port ${PORT}`
+  );
+
+  console.log(
+    `📊 Metrics available at /metrics`
+  );
 });
