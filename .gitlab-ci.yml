@@ -165,12 +165,6 @@ k8s_deploy:
     - echo "===== VERIFY SECRET ====="
     - kubectl get secret em-app-db || true
 
-    - echo "===== DELETE OLD SERVICES ====="
-    - kubectl delete svc backend-service --ignore-not-found=true
-    - kubectl delete svc frontend-service --ignore-not-found=true
-
-    - echo "===== WAIT FOR ELB CLEANUP ====="
-    - sleep 60
 
     - echo "===== APPLY SERVICES ====="
     - kubectl apply -f backend-service.yaml
