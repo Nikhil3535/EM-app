@@ -16,24 +16,24 @@ client.collectDefaultMetrics();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ===============================
-// 🔗 KUBERNETES BACKEND SERVICE
-// ===============================
-const BACKEND_URL = 'http://backend-service:80';
+// ✅ USE KUBERNETES SERVICE DNS
+const BACKEND_URL = 'http://backend-service';
 
-// ===============================
-// 🧩 MIDDLEWARE
-// ===============================
+// Middleware
 app.use(express.json());
 
 // ===============================
-// 🔁 API PROXY
+// 🔁 PROXY LAYER
 // ===============================
 app.use('/api', async (req, res) => {
   try {
 
-    // Forward original API path
-    const targetUrl = `${BACKEND_URL}${req.originalUrl}`;
+    // ✅ REMOVE /api PREFIX
+    const backendPath = req.originalUrl.replace(/^\/api/, '');
+
+    // Example:
+    // /api/register -> /register
+    const targetUrl = `${BACKEND_URL}${backendPath}`;
 
     console.log(`➡️ ${req.method} ${req.originalUrl} → ${targetUrl}`);
 
@@ -44,7 +44,6 @@ app.use('/api', async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
 
-        // Forward auth header if present
         ...(req.headers.authorization && {
           Authorization: req.headers.authorization
         })
@@ -58,23 +57,16 @@ app.use('/api', async (req, res) => {
 
     console.error('❌ Proxy Error:', error.message);
 
-    // Backend returned error response
     if (error.response) {
 
-      console.error('❌ Backend Response:', error.response.data);
+      res.status(error.response.status).json(error.response.data);
 
-      res.status(error.response.status).json(
-        error.response.data
-      );
-
-    // Backend unreachable / timeout
     } else if (error.request) {
 
       res.status(504).json({
         message: 'Backend not responding'
       });
 
-    // Internal proxy failure
     } else {
 
       res.status(500).json({
@@ -85,44 +77,29 @@ app.use('/api', async (req, res) => {
 });
 
 // ===============================
-// 📊 PROMETHEUS METRICS ROUTE
+// 📊 METRICS
 // ===============================
 app.get('/metrics', async (req, res) => {
   try {
 
     res.set('Content-Type', client.register.contentType);
-
     res.end(await client.register.metrics());
 
   } catch (error) {
 
     console.error('❌ Metrics Error:', error.message);
-
     res.status(500).end(error);
   }
 });
 
 // ===============================
-// 🌐 SERVE REACT BUILD
+// 🌐 REACT BUILD
 // ===============================
-app.use(
-  express.static(
-    path.join(__dirname, 'frontend', 'build')
-  )
-);
+app.use(express.static(path.join(__dirname, 'frontend', 'build')));
 
-// ===============================
-// 🌍 REACT ROUTER SUPPORT
-// ===============================
 app.get('*', (req, res) => {
-
   res.sendFile(
-    path.join(
-      __dirname,
-      'frontend',
-      'build',
-      'index.html'
-    )
+    path.join(__dirname, 'frontend', 'build', 'index.html')
   );
 });
 
@@ -130,9 +107,5 @@ app.get('*', (req, res) => {
 // 🚀 START SERVER
 // ===============================
 app.listen(PORT, () => {
-
   console.log(`✅ Server running on port ${PORT}`);
-
-  console.log(`🔗 Backend URL: ${BACKEND_URL}`);
-
 });
