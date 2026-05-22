@@ -3,6 +3,9 @@ kind: Deployment
 
 metadata:
   name: backend-deployment
+  labels:
+    app: backend
+    service: employee-backend
 
 spec:
   replicas: 1
@@ -15,6 +18,10 @@ spec:
     metadata:
       labels:
         app: backend
+        service: employee-backend
+
+      annotations:
+        logging: "promtail"
 
     spec:
       serviceAccountName: secrets-em-app
@@ -30,6 +37,7 @@ spec:
       containers:
         - name: backend
           image: niki2003/employee-backend:latest
+          imagePullPolicy: Always
 
           ports:
             - containerPort: 8080
@@ -42,3 +50,26 @@ spec:
             - name: secrets-store-inline
               mountPath: "/mnt/secrets-store"
               readOnly: true
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
