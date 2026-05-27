@@ -7,7 +7,7 @@ variables:
   DOCKER_IMAGE_BACKEND: "$DOCKER_USERNAME/employee-backend:$CI_COMMIT_SHORT_SHA"
   DOCKER_IMAGE_FRONTEND: "$DOCKER_USERNAME/employee-frontend:$CI_COMMIT_SHORT_SHA"
   AWS_REGION: "us-east-2"
-  EKS_CLUSTER_NAME: "em-cluster"
+  EKS_CLUSTER_NAME: "employee-cluster"
   DOCKER_TLS_CERTDIR: ""
 
 # -----------------------------
