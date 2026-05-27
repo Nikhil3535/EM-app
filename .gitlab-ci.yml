@@ -170,16 +170,16 @@ k8s_deploy:
   # KEEP FRONTEND ELB SAME
   # ------------------------------------------------
   - echo "===== VERIFY FRONTEND SERVICE ====="
-  - kubectl get svc frontend-service || kubectl apply -f frontend-service.yaml
-  - kubectl get svc backend-service || kubectl apply -f backend-service.yaml
+  - kubectl get svc frontend-service || kubectl apply -f k8s/frontend-service.yaml
+  - kubectl get svc backend-service || kubectl apply -f k8s/backend-service.yaml
   
 
   # ------------------------------------------------
   # DEPLOYMENTS
   # ------------------------------------------------
   - echo "===== APPLY DEPLOYMENTS ====="
-  - kubectl apply -f backend-deployment.yaml
-  - kubectl apply -f frontend-deployment.yaml
+  - kubectl apply -f k8s/backend-deployment.yaml
+  - kubectl apply -f k8s/frontend-deployment.yaml
 
   - echo "===== UPDATE IMAGES ====="
   - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
