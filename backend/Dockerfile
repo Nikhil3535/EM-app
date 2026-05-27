@@ -3,7 +3,7 @@ FROM maven:3.8.6-openjdk-11 AS builder
 WORKDIR /app
 
 COPY pom.xml ./
-RUN mvn dependency:resolve
+
 
 COPY src ./src
 RUN mvn package -DskipTests
