@@ -38,7 +38,17 @@ spec:
             - secretRef:
                 name: em-app-db
 
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: employee-backend
+
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4318
+
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+
           volumeMounts:
             - name: secrets-store-inline
               mountPath: "/mnt/secrets-store"
-              readOnly: true 
+              readOnly: true
