@@ -27,16 +27,16 @@ spec:
 
       env:
         - name: MYSQL_HOST
-          value: mysql-service
+          value: "mysql-service"
 
         - name: MYSQL_PORT
           value: "3306"
 
         - name: MYSQL_DB
-          value: employee_management
+          value: "employee_management"
 
         - name: MYSQL_USER
-          value: employeeuser
+          value: "employeeuser"
 
         - name: MYSQL_PASSWORD
           value: "nikhil@02"
