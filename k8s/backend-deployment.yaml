@@ -2,28 +2,26 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
- name: backend-deployment
+  name: backend-deployment
 
 spec:
-replicas: 1
+  replicas: 1
 
-selector:
-matchLabels:
-app: backend
+  selector:
+    matchLabels:
+      app: backend
 
-template:
-metadata:
-labels:
-app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
 
+    spec:
+      containers:
+        - name: backend
+          image: niki2003/employee-backend:latest
 
-spec:
-  containers:
-    - name: backend
-      image: niki2003/employee-backend:latest
-
-      ports:
-        - containerPort: 8080
-
+          ports:
+            - containerPort: 8080
       
         

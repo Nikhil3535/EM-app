@@ -178,6 +178,7 @@ k8s_deploy:
   # DEPLOYMENTS
   # ------------------------------------------------
   - echo "===== APPLY DEPLOYMENTS ====="
+  - kubectl apply --dry-run=client -f k8s/backend-deployment.yaml
   - kubectl apply -f k8s/backend-deployment.yaml
   - kubectl apply -f k8s/frontend-deployment.yaml
   - kubectl apply -f k8s/mysql-deployment.yaml
