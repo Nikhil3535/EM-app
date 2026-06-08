@@ -172,7 +172,7 @@ k8s_deploy:
   - echo "===== VERIFY FRONTEND SERVICE ====="
   - kubectl get svc frontend-service || kubectl apply -f k8s/frontend-service.yaml
   - kubectl get svc backend-service || kubectl apply -f k8s/backend-service.yaml
-  
+  - kubectl get svc mysql-service || kubectkl apply -f mysql_service.yml
 
   # ------------------------------------------------
   # DEPLOYMENTS
@@ -180,6 +180,7 @@ k8s_deploy:
   - echo "===== APPLY DEPLOYMENTS ====="
   - kubectl apply -f k8s/backend-deployment.yaml
   - kubectl apply -f k8s/frontend-deployment.yaml
+  - kubectl apply -f mysql-deployment.yml
 
   - echo "===== UPDATE IMAGES ====="
   - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
