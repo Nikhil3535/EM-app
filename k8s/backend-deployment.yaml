@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-name: backend-deployment
+ name: backend-deployment
 
 spec:
 replicas: 1
@@ -16,7 +16,7 @@ metadata:
 labels:
 app: backend
 
-```
+
 spec:
   containers:
     - name: backend
@@ -25,20 +25,5 @@ spec:
       ports:
         - containerPort: 8080
 
-      env:
-        - name: MYSQL_HOST
-          value: "mysql-service"
-
-        - name: MYSQL_PORT
-          value: "3306"
-
-        - name: MYSQL_DB
-          value: "employee_management"
-
-        - name: MYSQL_USER
-          value: "employeeuser"
-
-        - name: MYSQL_PASSWORD
-          value: "nikhil@02"
-
+      
         
