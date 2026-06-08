@@ -34,10 +34,17 @@ spec:
           ports:
             - containerPort: 8080
 
-          envFrom:
-            - secretRef:
-                name: em-app-db
-
+          env:
+           - name: MYSQL_HOST
+             value: mysql-service
+           - name: MYSQL_PORT
+             value: "3306"
+           - name: MYSQL_DB
+             value: employee_management
+           - name: MYSQL_USER
+             value: employeeuser
+           - name: MYSQL_PASSWORD
+             value: nikhil@02
           env:
             - name: OTEL_SERVICE_NAME
               value: employee-backend
