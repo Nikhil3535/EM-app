@@ -6,8 +6,8 @@ stages:
 variables:
   DOCKER_IMAGE_BACKEND: "$DOCKER_USERNAME/employee-backend:$CI_COMMIT_SHORT_SHA"
   DOCKER_IMAGE_FRONTEND: "$DOCKER_USERNAME/employee-frontend:$CI_COMMIT_SHORT_SHA"
-  AWS_REGION: "us-east-2"
-  EKS_CLUSTER_NAME: "employee-cluster"
+  AWS_REGION: "us-west-2"
+  EKS_CLUSTER_NAME: "em-cluster"
   DOCKER_TLS_CERTDIR: ""
 
 # -----------------------------
@@ -151,18 +151,18 @@ k8s_deploy:
     - aws sts get-caller-identity
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
   script:
-  - kubectl config current-context
-  - kubectl get pods -n kube-system
-  - kubectl get crds | grep secretprovider
+  #- kubectl config current-context
+  #- kubectl get pods -n kube-system
+  #- kubectl get crds | grep secretprovider
 
-  - echo "===== APPLY SECRET PROVIDER ====="
-  - kubectl apply -f secret-provider.yaml
+  #- echo "===== APPLY SECRET PROVIDER ====="
+  #- kubectl apply -f secret-provider.yaml
 
-  - echo "===== WAIT FOR SECRET SYNC ====="
-  - sleep 20
+  #- echo "===== WAIT FOR SECRET SYNC ====="
+  #- sleep 20
 
-  - echo "===== VERIFY SECRET ====="
-  - kubectl get secret em-app-db || true
+  #- echo "===== VERIFY SECRET ====="
+  #- kubectl get secret em-app-db || true
 
   
 
