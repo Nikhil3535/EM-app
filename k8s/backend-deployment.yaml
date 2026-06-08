@@ -2,75 +2,43 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: backend-deployment
+name: backend-deployment
 
 spec:
-  replicas: 1
+replicas: 1
 
-  selector:
-    matchLabels:
-      app: backend
+selector:
+matchLabels:
+app: backend
 
-  template:
-    metadata:
-      labels:
-        app: backend
+template:
+metadata:
+labels:
+app: backend
 
-    spec:
-      serviceAccountName: secrets-em-app
+```
+spec:
+  containers:
+    - name: backend
+      image: niki2003/employee-backend:latest
 
-      volumes:
-        - name: secrets-store-inline
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: em-db-secrets
+      ports:
+        - containerPort: 8080
 
-      containers:
-        - name: backend
-          image: niki2003/employee-backend:latest
+      env:
+        - name: MYSQL_HOST
+          value: mysql-service
 
-          ports:
-            - containerPort: 8080
+        - name: MYSQL_PORT
+          value: "3306"
 
-          env:
-           - name: MYSQL_HOST
-             value: mysql-service
-           - name: MYSQL_PORT
-             value: "3306"
-           - name: MYSQL_DB
-             value: employee_management
-           - name: MYSQL_USER
-             value: employeeuser
-           - name: MYSQL_PASSWORD
-             value: nikhil@02
-          env:
-            - name: OTEL_SERVICE_NAME
-              value: employee-backend
+        - name: MYSQL_DB
+          value: employee_management
 
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4318
+        - name: MYSQL_USER
+          value: employeeuser
 
-            - name: OTEL_EXPORTER_OTLP_PROTOCOL
-              value: http/protobuf
+        - name: MYSQL_PASSWORD
+          value: "nikhil@02"
 
-            - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
-              value: http/protobuf
-
-            - name: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
-              value: http/protobuf
-
-            - name: OTEL_TRACES_EXPORTER
-              value: otlp
-
-            - name: OTEL_METRICS_EXPORTER
-              value: none
-
-            - name: OTEL_LOGS_EXPORTER
-              value: otlp
-
-          volumeMounts:
-            - name: secrets-store-inline
-              mountPath: "/mnt/secrets-store"
-              readOnly: true
+        
