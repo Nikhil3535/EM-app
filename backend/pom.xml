@@ -144,28 +144,6 @@
     </dependency>
   </dependencies>
 
-  <configuration>
-
-    <appender name="console"
-              class="ch.qos.logback.core.ConsoleAppender">
-
-        <encoder>
-            <pattern>
-                %d %-5level [%thread]
-                trace_id=%X{trace_id}
-                span_id=%X{span_id}
-                %logger - %msg%n
-            </pattern>
-        </encoder>
-
-    </appender>
-
-    <root level="INFO">
-        <appender-ref ref="console"/>
-    </root>
-
-  </configuration> 
-
   <build>
     <plugins>
       <!-- Plugin: Spring Boot Maven Plugin -->
