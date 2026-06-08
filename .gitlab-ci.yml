@@ -183,6 +183,9 @@ k8s_deploy:
   - kubectl apply -f k8s/frontend-deployment.yaml
   - kubectl apply -f k8s/mysql-deployment.yaml
 
+  - echo "Backend image: $DOCKER_IMAGE_BACKEND"
+  - echo "Frontend image: $DOCKER_IMAGE_FRONTEND"
+
   - echo "===== UPDATE IMAGES ====="
   - kubectl set image deployment/backend-deployment backend=$DOCKER_IMAGE_BACKEND
   - kubectl set image deployment/frontend-deployment frontend=$DOCKER_IMAGE_FRONTEND
