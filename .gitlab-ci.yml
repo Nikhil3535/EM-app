@@ -172,7 +172,7 @@ k8s_deploy:
   - echo "===== VERIFY FRONTEND SERVICE ====="
   - kubectl get svc frontend-service || kubectl apply -f k8s/frontend-service.yaml
   - kubectl get svc backend-service || kubectl apply -f k8s/backend-service.yaml
-  - kubectl get svc mysql-service || kubectkl apply -f mysql_service.yml
+  - kubectl get svc mysql-service || kubectl apply -f mysql_service.yml
 
   # ------------------------------------------------
   # DEPLOYMENTS
