@@ -1,11 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Poppins', sans-serif !important;
-  background-color: #f4f4f4;
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+
+  background: linear-gradient(
+    135deg,
+    #0f172a 0%,
+    #1e293b 50%,
+    #334155 100%
+  );
+
+  color: #f8fafc;
 }
+
+/* Headings */
 
 h1,
 h2,
@@ -13,21 +28,30 @@ h3,
 h4,
 h5,
 h6 {
-  font-weight: 600;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 p,
 span,
 div,
-a,
-button {
+a {
   font-weight: 400;
 }
 
+/* Navbar */
+
 nav {
-  background-color: #333;
+  background: linear-gradient(
+    90deg,
+    #7c3aed,
+    #2563eb
+  );
+
   color: white;
-  padding: 1rem;
+  padding: 1rem 2rem;
+
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 nav ul {
@@ -35,30 +59,166 @@ nav ul {
   margin: 0;
   padding: 0;
   display: flex;
-}
-
-nav ul li {
-  margin-right: 1rem;
+  gap: 20px;
 }
 
 nav ul li a {
   color: white;
   text-decoration: none;
+  font-weight: 500;
+  transition: 0.3s;
 }
+
+nav ul li a:hover {
+  color: #fbbf24;
+}
+
+/* Buttons */
 
 button {
   margin-left: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: #007bff;
+  padding: 10px 18px;
+
+  background: linear-gradient(
+    135deg,
+    #8b5cf6,
+    #06b6d4
+  );
+
   color: white;
   border: none;
+  border-radius: 10px;
   cursor: pointer;
+
+  font-weight: 600;
+
+  transition: all 0.3s ease;
 }
 
 button:hover {
-  background-color: #0056b3;
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 20px rgba(
+    139,
+    92,
+    246,
+    0.4
+  );
 }
 
-h2 {
-  margin-top: 1rem;
+/* Cards */
+
+.card {
+  background: rgba(255, 255, 255, 0.08);
+
+  backdrop-filter: blur(12px);
+
+  border-radius: 16px;
+
+  border: 1px solid rgba(
+    255,
+    255,
+    255,
+    0.08
+  );
+
+  padding: 20px;
+
+  box-shadow: 0 8px 30px rgba(
+    0,
+    0,
+    0,
+    0.3
+  );
+}
+
+/* Tables */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #334155;
+}
+
+th {
+  color: white;
+  padding: 14px;
+}
+
+td {
+  padding: 14px;
+  border-bottom: 1px solid #475569;
+}
+
+tr:hover {
+  background: rgba(
+    139,
+    92,
+    246,
+    0.08
+  );
+}
+
+/* Links */
+
+a {
+  color: #38bdf8;
+  transition: 0.3s;
+}
+
+a:hover {
+  color: #a855f7;
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7c3aed;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+
+/* Canary Badge */
+
+.canary-badge {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+
+  background: linear-gradient(
+    135deg,
+    #ff4081,
+    #7c3aed
+  );
+
+  color: white;
+
+  padding: 10px 16px;
+
+  border-radius: 12px;
+
+  font-weight: bold;
+
+  z-index: 9999;
+
+  box-shadow: 0 4px 12px rgba(
+    0,
+    0,
+    0,
+    0.3
+  );
 }

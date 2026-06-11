@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: frontend_v2
+  labels:
+    app: frontend
+    version: v2
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: frontend
+      version: v2
+
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: v2
+
+    spec:
+      containers:
+        - name: frontend
+          image: niki2003/employee-frontend:v2
+
+          ports:
+            - containerPort: 80
+
+          imagePullPolicy: Always

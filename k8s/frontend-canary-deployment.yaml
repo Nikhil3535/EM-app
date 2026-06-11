@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: canary
+    spec:
+      containers:
+      - name: frontend
+        image: niki2003/employee-frontend:v2
+        ports:
+        - containerPort: 80

@@ -27,10 +27,14 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successOpen, setSuccessOpen] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
+
   const redirectPath = location.state?.from;
-  const destinationLabel = redirectPath ? 'Continue' : 'Go to dashboard';
+  const destinationLabel = redirectPath
+    ? 'Continue'
+    : 'Go to Dashboard';
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -40,11 +44,17 @@ const Login = () => {
     try {
       const response = await fetch('/api/authenticate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
       });
 
       const data = await response.json();
+
       setLoading(false);
 
       if (response.ok) {
@@ -52,16 +62,20 @@ const Login = () => {
         localStorage.setItem('EMSusername', username);
         setSuccessOpen(true);
       } else {
-        setError('Invalid credentials. Please try again.');
+        setError(
+          'Invalid credentials. Please try again.'
+        );
       }
     } catch (err) {
       setLoading(false);
-      setError('Invalid credentials or our server is not currently active. Please try again later.');
+      setError(
+        'Invalid credentials or server unavailable. Please try again later.'
+      );
     }
   };
 
   const handleTogglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    setShowPassword(prev => !prev);
   };
 
   const handleSuccessContinue = () => {
@@ -77,118 +91,248 @@ const Login = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1E3C72 0%, #2A5298 100%)',
+        background:
+          'linear-gradient(135deg, #0F172A 0%, #1E293B 40%, #312E81 100%)',
         padding: 2,
-        borderRadius: 6,
+        position: 'relative',
       }}
     >
+      {/* Canary Badge */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 20,
+          right: 20,
+          background:
+            'linear-gradient(135deg,#EC4899,#7C3AED)',
+          color: '#fff',
+          px: 2,
+          py: 1,
+          borderRadius: 3,
+          fontWeight: 'bold',
+          zIndex: 9999,
+          boxShadow:
+            '0 8px 20px rgba(0,0,0,0.3)',
+        }}
+      >
+        🚀 CANARY v2
+      </Box>
+
       <Card
         sx={{
           width: '100%',
-          maxWidth: 900,
-          boxShadow: '0 25px 70px rgba(15, 23, 42, 0.25)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: 4,
+          maxWidth: 950,
+          borderRadius: 5,
           overflow: 'hidden',
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' },
-          backdropFilter: 'blur(6px)',
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: '1.1fr 0.9fr',
+          },
+          boxShadow:
+            '0 25px 70px rgba(0,0,0,0.45)',
+          border:
+            '1px solid rgba(255,255,255,0.08)',
         }}
       >
+        {/* Left Section */}
         <Box
           sx={{
-            background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
-            color: '#1a1a1a',
-            padding: { xs: 3, md: 5 },
+            background:
+              'linear-gradient(135deg,#7C3AED 0%,#2563EB 100%)',
+            color: '#fff',
+            padding: { xs: 4, md: 5 },
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             gap: 2,
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 800 }}>
-            Welcome back
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+            }}
+          >
+            🚀 Welcome to EMS v2
           </Typography>
-          <Typography>Sign in to access your dashboard, manage employees, and keep your organization humming.</Typography>
+
+          <Typography>
+            Experience the new canary release with
+            enhanced design, improved usability, and
+            modern UI styling.
+          </Typography>
+
           <Stack spacing={1}>
-            <Typography sx={{ fontWeight: 600 }}>Why log in?</Typography>
-            <Typography variant="body2">• Securely access the insights-rich dashboard.</Typography>
-            <Typography variant="body2">• Manage teams, departments, and updates in one spot.</Typography>
-            <Typography variant="body2">• Pick up where you left off with your saved session.</Typography>
+            <Typography fontWeight={700}>
+              Why log in?
+            </Typography>
+
+            <Typography variant="body2">
+              • Access your employee dashboard.
+            </Typography>
+
+            <Typography variant="body2">
+              • Manage employees and departments.
+            </Typography>
+
+            <Typography variant="body2">
+              • View reports and analytics.
+            </Typography>
+
+            <Typography variant="body2">
+              • Continue from your previous session.
+            </Typography>
           </Stack>
         </Box>
+
+        {/* Right Section */}
         <CardContent
           sx={{
             padding: { xs: 3, md: 4 },
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(8px)',
+            background:
+              'rgba(30,41,59,0.97)',
+            color: '#fff',
+            backdropFilter: 'blur(12px)',
           }}
         >
-          <Typography variant="h5" component="h2" textAlign="center" sx={{ marginBottom: '0.5rem', fontWeight: 700 }}>
-            Login
+          <Typography
+            variant="h5"
+            textAlign="center"
+            sx={{
+              mb: 2,
+              fontWeight: 700,
+            }}
+          >
+            Employee Management 🚀 v2
           </Typography>
+
+          <Alert
+            severity="success"
+            sx={{
+              mb: 2,
+              fontWeight: 'bold',
+            }}
+          >
+            🚀 Canary Release v2 Active
+          </Alert>
+
           {redirectPath && (
-            <Alert severity="info" sx={{ marginBottom: '1rem' }}>
-              Please log in to continue to <strong>{redirectPath}</strong>.
+            <Alert
+              severity="info"
+              sx={{ mb: 2 }}
+            >
+              Please log in to continue to{' '}
+              <strong>{redirectPath}</strong>.
             </Alert>
           )}
+
           <form onSubmit={handleSubmit}>
             <Stack spacing={2}>
               <TextField
                 fullWidth
                 label="Username"
                 value={username}
-                onChange={e => setUsername(e.target.value)}
-                InputProps={{
-                  style: {
-                    fontFamily: 'Poppins, sans-serif',
-                  },
-                }}
+                onChange={e =>
+                  setUsername(e.target.value)
+                }
               />
+
               <TextField
                 fullWidth
                 label="Password"
-                type={showPassword ? 'text' : 'password'}
+                type={
+                  showPassword
+                    ? 'text'
+                    : 'password'
+                }
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={e =>
+                  setPassword(e.target.value)
+                }
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton aria-label="toggle password visibility" onClick={handleTogglePasswordVisibility} edge="end">
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      <IconButton
+                        onClick={
+                          handleTogglePasswordVisibility
+                        }
+                        edge="end"
+                      >
+                        {showPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
                       </IconButton>
                     </InputAdornment>
                   ),
-                  style: {
-                    fontFamily: 'Poppins, sans-serif',
-                  },
                 }}
               />
+
               {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                  }}
+                >
                   <CircularProgress />
                 </Box>
               ) : (
-                <Button fullWidth variant="contained" color="primary" type="submit" sx={{ paddingY: 1.2 }}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  type="submit"
+                  sx={{
+                    py: 1.5,
+                    fontWeight: 700,
+                    borderRadius: 3,
+                    background:
+                      'linear-gradient(90deg,#7C3AED,#06B6D4)',
+                    '&:hover': {
+                      background:
+                        'linear-gradient(90deg,#8B5CF6,#0891B2)',
+                    },
+                  }}
+                >
                   Login
                 </Button>
               )}
+
               {error && (
-                <Typography color="error" textAlign="center" sx={{ marginTop: '-0.5rem' }}>
+                <Typography
+                  color="error"
+                  textAlign="center"
+                >
                   {error}
                 </Typography>
               )}
+
               <Divider />
-              <Stack spacing={1} alignItems="center">
+
+              <Stack
+                spacing={1}
+                alignItems="center"
+              >
                 <Typography variant="body2">
-                  Don't have an account?{' '}
-                  <Button color="primary" component="a" href="/register" size="small">
+                  Don't have an account?
+                  <Button
+                    component="a"
+                    href="/register"
+                    size="small"
+                  >
                     Register
                   </Button>
                 </Typography>
+
                 <Typography variant="body2">
-                  Forgot your password?{' '}
-                  <Button color="primary" component="a" href="/verify-username" size="small">
+                  Forgot password?
+                  <Button
+                    component="a"
+                    href="/verify-username"
+                    size="small"
+                  >
                     Reset Password
                   </Button>
                 </Typography>
@@ -198,13 +342,32 @@ const Login = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={successOpen} onClose={handleSuccessContinue} aria-labelledby="login-success-title">
-        <DialogTitle id="login-success-title">Login successful</DialogTitle>
+      <Dialog
+        open={successOpen}
+        onClose={handleSuccessContinue}
+        PaperProps={{
+          sx: {
+            background: '#1E293B',
+            color: '#fff',
+            borderRadius: 3,
+          },
+        }}
+      >
+        <DialogTitle>
+          🎉 Login Successful
+        </DialogTitle>
+
         <DialogContent>
-          <Typography variant="body1">Welcome back, {username || 'there'}! Ready to continue?</Typography>
+          <Typography>
+            Welcome back, {username || 'User'}!
+          </Typography>
         </DialogContent>
+
         <DialogActions>
-          <Button variant="contained" onClick={handleSuccessContinue}>
+          <Button
+            variant="contained"
+            onClick={handleSuccessContinue}
+          >
             {destinationLabel}
           </Button>
         </DialogActions>
